@@ -1,0 +1,19 @@
+{
+  "name": "rosey-threejs-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {
+    "@types/dat.gui": "0.7.2",
+    "dat.gui": "0.7.6",
+    "three": "0.105.2"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.6.1"
+  },
+  "keywords": []
+}
