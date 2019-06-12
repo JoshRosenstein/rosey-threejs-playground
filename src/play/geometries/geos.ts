@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as dat from "dat.gui";
-
+import { klein, makeHeartShape } from "./helpers";
 const geometries = {
   BoxBufferGeometry: "BoxBufferGeometry",
   BoxGeometry: "BoxGeometry",
@@ -40,8 +40,9 @@ const geometries = {
   ExtrudeGeometry: "ExtrudeGeometry",
   ExtrudeBufferGeometry: "ExtrudeBufferGeometry"
 };
+const defaultGeo = "ShapeGeometry";
 const Navoptions = {
-  Geometry: "BoxBufferGeometry"
+  Geometry: defaultGeo
 };
 
 const TWO_PI = Math.PI * 2;
@@ -92,7 +93,7 @@ const createSceneContoller = () => {
   };
 };
 
-const guiAddFolder = createSceneContoller();
+const makeControlFolder = createSceneContoller();
 
 export function setVisibility(mesh: GeoGroup) {
   if (GData.enableNormals) {
@@ -119,19 +120,18 @@ function updateGroupGeometry<T extends THREE.Geometry | THREE.BufferGeometry>(
   _scene: THREE.Scene,
   geometry: T
 ) {
+  mesh.children[0].geometry.dispose();
+  mesh.children[1].geometry.dispose();
   mesh.children[2].geometry.dispose();
   mesh.children[3].geometry.dispose();
+
+  mesh.children[0].geometry = new THREE.WireframeGeometry(geometry);
+  mesh.children[1].geometry = geometry;
 
   mesh.children[3].geometry = geometry;
   const helper = new THREE.VertexNormalsHelper(mesh.children[3], 10);
   mesh.children[2].geometry = helper.geometry;
   mesh.children[2].material = helper.material;
-
-  mesh.children[0].geometry.dispose();
-  mesh.children[1].geometry.dispose();
-
-  mesh.children[0].geometry = new THREE.WireframeGeometry(geometry);
-  mesh.children[1].geometry = geometry;
 }
 
 function CustomSinCurve(scale) {
@@ -152,43 +152,6 @@ CustomSinCurve.prototype.getPoint = function(t) {
 };
 
 // heart shape
-
-var x = 0,
-  y = 0;
-
-var heartShape = new THREE.Shape();
-
-heartShape.moveTo(x + 5, y + 5);
-heartShape.bezierCurveTo(x + 5, y + 5, x + 4, y, x, y);
-heartShape.bezierCurveTo(x - 6, y, x - 6, y + 7, x - 6, y + 7);
-heartShape.bezierCurveTo(x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19);
-heartShape.bezierCurveTo(x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7);
-heartShape.bezierCurveTo(x + 16, y + 7, x + 16, y, x + 10, y);
-heartShape.bezierCurveTo(x + 7, y, x + 5, y + 5, x + 5, y + 5);
-
-function klein(v, u, target) {
-  u *= Math.PI;
-  v *= 2 * Math.PI;
-
-  u = u * 2;
-  var x, y, z;
-  if (u < Math.PI) {
-    x =
-      3 * Math.cos(u) * (1 + Math.sin(u)) +
-      2 * (1 - Math.cos(u) / 2) * Math.cos(u) * Math.cos(v);
-    z =
-      -8 * Math.sin(u) - 2 * (1 - Math.cos(u) / 2) * Math.sin(u) * Math.cos(v);
-  } else {
-    x =
-      3 * Math.cos(u) * (1 + Math.sin(u)) +
-      2 * (1 - Math.cos(u) / 2) * Math.cos(v + Math.PI);
-    z = -8 * Math.sin(u);
-  }
-
-  y = -2 * (1 - Math.cos(u) / 2) * Math.sin(v);
-
-  target.set(x, y, z);
-}
 
 const guis = {
   BoxBufferGeometry: function(mesh: GeoGroup, scene: THREE.Scene) {
@@ -216,7 +179,7 @@ const guis = {
       );
     }
 
-    const folder = guiAddFolder(mesh, "THREE.BoxBufferGeometry");
+    const folder = makeControlFolder(mesh, "THREE.BoxBufferGeometry");
 
     folder.add(data, "width", 1, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 30).onChange(generateGeometry);
@@ -262,7 +225,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.BoxGeometry");
+    var folder = makeControlFolder(mesh, "THREE.BoxGeometry");
 
     folder.add(data, "width", 1, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 30).onChange(generateGeometry);
@@ -312,7 +275,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.CylinderBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.CylinderBufferGeometry");
 
     folder.add(data, "radiusTop", 0, 30).onChange(generateGeometry);
     folder.add(data, "radiusBottom", 0, 30).onChange(generateGeometry);
@@ -361,7 +324,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.CylinderGeometry");
+    var folder = makeControlFolder(mesh, "THREE.CylinderGeometry");
 
     folder.add(data, "radiusTop", 1, 30).onChange(generateGeometry);
     folder.add(data, "radiusBottom", 1, 30).onChange(generateGeometry);
@@ -408,7 +371,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ConeBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ConeBufferGeometry");
 
     folder.add(data, "radius", 0, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 50).onChange(generateGeometry);
@@ -454,7 +417,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ConeGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ConeGeometry");
 
     folder.add(data, "radius", 0, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 50).onChange(generateGeometry);
@@ -494,7 +457,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.CircleBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.CircleBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -528,7 +491,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.CircleGeometry");
+    var folder = makeControlFolder(mesh, "THREE.CircleGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -555,7 +518,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.DodecahedronGeometry");
+    var folder = makeControlFolder(mesh, "THREE.DodecahedronGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -580,7 +543,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.DodecahedronBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.DodecahedronBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -605,7 +568,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.IcosahedronGeometry");
+    var folder = makeControlFolder(mesh, "THREE.IcosahedronGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -630,7 +593,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.IcosahedronBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.IcosahedronBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -665,7 +628,7 @@ const guis = {
       updateGroupGeometry(mesh, scene, geometry);
     }
 
-    var folder = guiAddFolder(mesh, "THREE.LatheBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.LatheBufferGeometry");
 
     folder
       .add(data, "segments", 1, 30)
@@ -701,7 +664,7 @@ const guis = {
       updateGroupGeometry(mesh, scene, geometry);
     }
 
-    var folder = guiAddFolder(mesh, "THREE.LatheGeometry");
+    var folder = makeControlFolder(mesh, "THREE.LatheGeometry");
 
     folder
       .add(data, "segments", 1, 30)
@@ -727,7 +690,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.OctahedronGeometry");
+    var folder = makeControlFolder(mesh, "THREE.OctahedronGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -752,7 +715,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.OctahedronBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.OctahedronBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -784,7 +747,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.PlaneBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.PlaneBufferGeometry");
 
     folder.add(data, "width", 1, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 30).onChange(generateGeometry);
@@ -821,7 +784,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.PlaneGeometry");
+    var folder = makeControlFolder(mesh, "THREE.PlaneGeometry");
 
     folder.add(data, "width", 1, 30).onChange(generateGeometry);
     folder.add(data, "height", 1, 30).onChange(generateGeometry);
@@ -862,7 +825,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.RingBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.RingBufferGeometry");
 
     folder.add(data, "innerRadius", 1, 30).onChange(generateGeometry);
     folder.add(data, "outerRadius", 1, 30).onChange(generateGeometry);
@@ -905,7 +868,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.RingGeometry");
+    var folder = makeControlFolder(mesh, "THREE.RingGeometry");
 
     folder.add(data, "innerRadius", 1, 30).onChange(generateGeometry);
     folder.add(data, "outerRadius", 1, 30).onChange(generateGeometry);
@@ -950,7 +913,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.SphereBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.SphereBufferGeometry");
 
     folder.add(data, "radius", 1, 30).onChange(generateGeometry);
     folder
@@ -996,7 +959,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.SphereGeometry");
+    var folder = makeControlFolder(mesh, "THREE.SphereGeometry");
 
     folder.add(data, "radius", 1, 30).onChange(generateGeometry);
     folder
@@ -1029,7 +992,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TetrahedronGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TetrahedronGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -1054,7 +1017,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TetrahedronBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TetrahedronBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder
@@ -1112,7 +1075,7 @@ const guis = {
     //Hide the wireframe
     mesh.children[0].visible = false;
 
-    var folder = guiAddFolder(mesh, "THREE.TextGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TextGeometry");
 
     folder.add(data, "text").onChange(generateGeometry);
     folder.add(data, "size", 1, 30).onChange(generateGeometry);
@@ -1157,7 +1120,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TorusBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TorusBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder.add(data, "tube", 0.1, 10).onChange(generateGeometry);
@@ -1197,7 +1160,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TorusGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TorusGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder.add(data, "tube", 0.1, 10).onChange(generateGeometry);
@@ -1239,7 +1202,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TorusKnotBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TorusKnotBufferGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder.add(data, "tube", 0.1, 10).onChange(generateGeometry);
@@ -1288,7 +1251,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TorusKnotGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TorusKnotGeometry");
 
     folder.add(data, "radius", 1, 20).onChange(generateGeometry);
     folder.add(data, "tube", 0.1, 10).onChange(generateGeometry);
@@ -1326,7 +1289,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ParametricBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ParametricBufferGeometry");
 
     folder
       .add(data, "slices", 1, 100)
@@ -1354,7 +1317,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ParametricGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ParametricGeometry");
 
     folder
       .add(data, "slices", 1, 100)
@@ -1391,7 +1354,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TubeGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TubeGeometry");
 
     folder
       .add(data, "segments", 1, 100)
@@ -1429,7 +1392,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.TubeBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.TubeBufferGeometry");
 
     folder
       .add(data, "segments", 1, 100)
@@ -1446,45 +1409,56 @@ const guis = {
 
   ShapeGeometry: function(mesh: GeoGroup, scene: THREE.Scene) {
     var data = {
-      segments: 12
+      segments: 12,
+      x: 0,
+      y: 0
     };
 
     function generateGeometry() {
       updateGroupGeometry(
         mesh,
         scene,
-        new THREE.ShapeGeometry(heartShape, data.segments)
+        new THREE.ShapeGeometry(makeHeartShape(data.x, data.y), data.segments)
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ShapeGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ShapeGeometry");
     folder
       .add(data, "segments", 1, 100)
       .step(1)
       .onChange(generateGeometry);
 
+    folder.add(data, "x", -20, 20).onChange(generateGeometry);
+    folder.add(data, "y", -20, 20).onChange(generateGeometry);
     generateGeometry();
   },
 
   ShapeBufferGeometry: function(mesh: GeoGroup, scene: THREE.Scene) {
     var data = {
-      segments: 12
+      segments: 12,
+      x: 0,
+      y: 0
     };
 
     function generateGeometry() {
       updateGroupGeometry(
         mesh,
         scene,
-        new THREE.ShapeBufferGeometry(heartShape, data.segments)
+        new THREE.ShapeBufferGeometry(
+          makeHeartShape(data.x, data.y),
+          data.segments
+        )
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ShapeBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ShapeBufferGeometry");
     folder
       .add(data, "segments", 1, 100)
       .step(1)
       .onChange(generateGeometry);
 
+    folder.add(data, "x", -20, 20);
+    folder.add(data, "y", -20, 20);
     generateGeometry();
   },
 
@@ -1512,7 +1486,7 @@ const guis = {
       updateGroupGeometry(mesh, scene, new THREE.ExtrudeGeometry(shape, data));
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ExtrudeGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ExtrudeGeometry");
 
     folder
       .add(data, "steps", 1, 10)
@@ -1566,7 +1540,7 @@ const guis = {
       );
     }
 
-    var folder = guiAddFolder(mesh, "THREE.ExtrudeBufferGeometry");
+    var folder = makeControlFolder(mesh, "THREE.ExtrudeBufferGeometry");
 
     folder
       .add(data, "steps", 1, 10)
@@ -1594,7 +1568,7 @@ const guis = {
 };
 
 export function chooseFromHash(mesh: GeoGroup, scene: THREE.Scene) {
-  const selectedGeometry = window.location.hash.substring(1) || "TorusGeometry";
+  const selectedGeometry = window.location.hash.substring(1) || defaultGeo;
 
   if (guis[selectedGeometry] !== undefined) {
     guis[selectedGeometry](mesh, scene);
